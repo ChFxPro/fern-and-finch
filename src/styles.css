@@ -258,6 +258,7 @@ footer button { padding: 0; border: 0; background: transparent; color: inherit; 
 .studio-login input { min-width: 0; }
 .studio-login > span { width: 62px; height: 62px; margin: 0 auto 18px; display: grid; place-items: center; border-radius: 50%; background: var(--forest); color: var(--paper); }
 .studio-login .field { margin: 26px 0 13px; }
+.studio-login .studio-password-field { margin-top: 0; }
 .studio-sent { margin: 0 0 13px; padding: 12px; display: flex; align-items: center; gap: 8px; background: #dde7da; color: var(--forest); font-size: 11px; text-align: left; }
 .publish-success { min-height: 65vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 .publish-success > span { width: 70px; height: 70px; display: grid; place-items: center; border-radius: 50%; background: var(--moss); color: white; }

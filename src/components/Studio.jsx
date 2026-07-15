@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Camera, Check, ChevronLeft, ImagePlus, ListTree, LoaderCircle, LogOut, Mail, Plus, Sparkles, Star, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Camera, Check, ChevronLeft, ImagePlus, ListTree, LoaderCircle, LockKeyhole, LogOut, Plus, Sparkles, Star, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { CatalogManager } from './CatalogManager.jsx'
 import { BotanicalDivider } from './BotanicalDivider.jsx'
@@ -17,61 +17,79 @@ const studioUrl = () => {
 
 function StudioAccess({ onReady }) {
   const [email, setEmail] = useState('')
-  const [state, setState] = useState({ loading: true, sent: false, error: '', denied: false })
+  const [password, setPassword] = useState('')
+  const [state, setState] = useState({ loading: true, error: '', denied: false })
 
   useEffect(() => {
     let active = true
     const inspect = async () => {
-      if (!supabaseConfigured) return active && setState({ loading: false, sent: false, error: 'The shop database is not connected yet.', denied: false })
+      if (!supabaseConfigured) return active && setState({ loading: false, error: 'The shop database is not connected yet.', denied: false })
 
       const callbackError = new URLSearchParams(location.hash.slice(1)).get('error_description') || new URL(location.href).searchParams.get('error_description')
       if (callbackError) {
         history.replaceState(null, '', studioUrl())
-        return active && setState({ loading: false, sent: false, error: 'That sign-in link has expired or was already used. Please request a fresh one.', denied: false })
+        return active && setState({ loading: false, error: 'That sign-in link has expired or was already used. Please sign in again.', denied: false })
       }
 
       const { data, error } = await supabase.auth.getSession()
-      if (error) return active && setState({ loading: false, sent: false, error: 'We could not open your saved sign-in. Please request a fresh link.', denied: false })
+      if (error) return active && setState({ loading: false, error: 'We could not open your saved sign-in. Please sign in again.', denied: false })
       if (!data.session) return active && setState((current) => ({ ...current, loading: false }))
 
       const { data: verified, error: verificationError } = await supabase.auth.getUser()
       if (verificationError || !verified.user) {
         await supabase.auth.signOut()
-        return active && setState({ loading: false, sent: false, error: 'Your sign-in has expired. Please request a fresh link.', denied: false })
+        return active && setState({ loading: false, error: 'Your sign-in has expired. Please sign in again.', denied: false })
       }
       if (await checkAdmin()) return active && onReady(data.session)
-      return active && setState({ loading: false, sent: false, error: '', denied: true })
+      return active && setState({ loading: false, error: '', denied: true })
     }
     inspect()
     const { data: listener } = supabaseConfigured ? supabase.auth.onAuthStateChange(() => setTimeout(inspect, 0)) : { data: {} }
     return () => { active = false; listener?.subscription?.unsubscribe() }
   }, [onReady])
 
-  const sendLink = async (event) => {
+  const signIn = async (event) => {
     event.preventDefault()
-    setState({ loading: true, sent: false, error: '', denied: false })
-    const { error } = await supabase.auth.signInWithOtp({
+    setState({ loading: true, error: '', denied: false })
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
-      options: { emailRedirectTo: studioUrl().toString(), shouldCreateUser: false },
+      password,
     })
-    setState(error ? { loading: false, sent: false, error: error.message, denied: false } : { loading: false, sent: true, error: '', denied: false })
+    if (error || !data.session) {
+      setState({ loading: false, error: 'That email and store password did not match. Please try again.', denied: false })
+      return
+    }
+
+    const { data: verified, error: verificationError } = await supabase.auth.getUser()
+    if (verificationError || !verified.user) {
+      await supabase.auth.signOut()
+      setState({ loading: false, error: 'We could not verify this sign-in. Please try again.', denied: false })
+      return
+    }
+    if (await checkAdmin()) {
+      onReady(data.session)
+      return
+    }
+    await supabase.auth.signOut()
+    setState({ loading: false, error: '', denied: true })
   }
 
   const useAnotherEmail = async () => {
     await supabase.auth.signOut()
     setEmail('')
-    setState({ loading: false, sent: false, error: '', denied: false })
+    setPassword('')
+    setState({ loading: false, error: '', denied: false })
   }
 
   if (state.loading) return <div className="studio-login"><LoaderCircle className="spin" /><p>Opening the studio…</p></div>
-  if (state.denied) return <div className="studio-login"><span><Mail /></span><h1>Almost ready.</h1><p>This email is signed in, but it still needs shop-owner access.</p><button className="text-link" onClick={useAnotherEmail}>Use a different email</button></div>
+  if (state.denied) return <div className="studio-login"><span><LockKeyhole /></span><h1>Almost ready.</h1><p>This account is signed in, but it still needs shop-owner access.</p><button className="text-link" onClick={useAnotherEmail}>Use a different account</button></div>
   return (
-    <form className="studio-login" onSubmit={sendLink}>
-      <span><Mail /></span><BotanicalDivider /><h1>Welcome to the studio.</h1><p>Enter your email and we’ll send a safe, password-free sign-in link.</p>
+    <form className="studio-login" onSubmit={signIn}>
+      <span><LockKeyhole /></span><BotanicalDivider /><h1>Welcome to the studio.</h1><p>Sign in with your private Fern &amp; Finch store password.</p>
       <label className="field"><span>Email address</span><input type="email" inputMode="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" required /></label>
-      {state.sent ? <p className="studio-sent" role="status"><Check /> Link sent. Check your email, then tap it to open the studio.</p> : null}
+      <label className="field studio-password-field"><span>Store password</span><input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
       {state.error ? <p className="form-error" role="alert">{state.error}</p> : null}
-      <button className="button button--clay button--wide" disabled={state.loading}>{state.loading ? <LoaderCircle className="spin" /> : <Mail />} {state.sent ? 'Send a fresh link' : 'Email my sign-in link'}</button>
+      <button className="button button--clay button--wide" disabled={state.loading}>{state.loading ? <LoaderCircle className="spin" /> : <LockKeyhole />} Sign in to the studio</button>
     </form>
   )
 }
