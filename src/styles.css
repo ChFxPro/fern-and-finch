@@ -207,13 +207,15 @@ footer button { padding: 0; border: 0; background: transparent; color: inherit; 
 .choose-photos input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .photo-limit { display: block; color: var(--muted); font-size: 10px; }
 .studio-photo-grid { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.studio-photo { aspect-ratio: 1; position: relative; overflow: hidden; border: 1px solid transparent; background: var(--paper-deep); }
+.studio-photo { aspect-ratio: 4/5; position: relative; overflow: hidden; border: 1px solid transparent; background: var(--paper-deep); }
 .studio-photo--cover { border: 2px solid var(--moss); }
-.studio-photo > img { width: 100%; height: 100%; object-fit: cover; }
+.crop-frame { width: 100%; height: 100%; background-color: var(--paper-deep); }
 .cover-label { position: absolute; top: 8px; left: 8px; padding: 7px 9px; display: flex; align-items: center; gap: 5px; background: var(--moss); color: white; font-size: 9px; }
 .remove-photo { width: 36px; height: 36px; position: absolute; top: 7px; right: 7px; display: grid; place-items: center; border: 0; border-radius: 50%; background: white; cursor: pointer; }
 .remove-photo svg { width: 16px; }
-.photo-order { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); display: flex; background: var(--forest); }
+.crop-photo { min-height: 36px; position: absolute; left: 8px; bottom: 8px; padding: 0 10px; display: flex; align-items: center; gap: 6px; border: 0; background: var(--paper); color: var(--forest); font-size: 9px; font-weight: 600; cursor: pointer; }
+.crop-photo svg { width: 15px; }
+.photo-order { position: absolute; right: 8px; bottom: 8px; display: flex; background: var(--forest); }
 .photo-order button { width: 38px; height: 36px; display: grid; place-items: center; border: 0; border-right: 1px solid rgba(255,255,255,.2); background: transparent; color: white; cursor: pointer; }
 .photo-order button:disabled { opacity: .28; }
 .photo-order svg { width: 16px; }
@@ -248,7 +250,7 @@ footer button { padding: 0; border: 0; background: transparent; color: inherit; 
 .studio-sticky-actions--three { display: grid; grid-template-columns: 1fr 1fr 1fr; }
 .review-step > p { margin-bottom: 28px; }
 .listing-preview { display: grid; grid-template-columns: 52% 48%; border: 1px solid var(--line); background: rgba(255,255,255,.38); text-align: left; }
-.listing-preview > img { width: 100%; height: 100%; min-height: 430px; object-fit: cover; }
+.listing-preview-image { min-height: 430px; }
 .listing-preview > div { padding: 38px; display: flex; flex-direction: column; justify-content: center; }
 .listing-preview span { color: var(--clay-dark); text-transform: uppercase; letter-spacing: .14em; font-size: 9px; }
 .listing-preview h2 { margin: 8px 0 14px; font: 400 38px/1 var(--serif); }
@@ -264,6 +266,23 @@ footer button { padding: 0; border: 0; background: transparent; color: inherit; 
 .studio-login .field { margin: 26px 0 13px; }
 .studio-login .studio-password-field { margin-top: 0; }
 .studio-sent { margin: 0 0 13px; padding: 12px; display: flex; align-items: center; gap: 8px; background: #dde7da; color: var(--forest); font-size: 11px; text-align: left; }
+.crop-editor-backdrop { position: fixed; inset: 0; z-index: 20; padding: 22px; display: grid; place-items: center; overflow: hidden; overscroll-behavior: contain; background: rgba(8,20,14,.82); backdrop-filter: blur(5px); }
+.crop-editor { width: min(520px,100%); max-height: calc(100dvh - 44px); padding: 24px; overflow-y: auto; background: #f7f3e9; box-shadow: 0 28px 80px rgba(0,0,0,.35); text-align: left; }
+.crop-editor > header { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
+.crop-editor > header span { color: var(--clay-dark); text-transform: uppercase; letter-spacing: .14em; font-size: 8px; font-weight: 600; }
+.crop-editor > header h2 { margin: 4px 0 0; font: 400 34px/1 var(--serif); }
+.crop-stage { width: min(300px,100%); aspect-ratio: 4/5; margin: 22px auto 13px; overflow: hidden; background-color: var(--paper-deep); box-shadow: 0 12px 34px rgba(23,27,23,.16); cursor: grab; touch-action: none; user-select: none; }
+.crop-stage:active { cursor: grabbing; }
+.crop-hint { margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--muted); font-size: 10px; text-align: center; }
+.crop-hint svg { width: 15px; flex: 0 0 auto; }
+.crop-controls { display: grid; gap: 14px; }
+.crop-controls label { display: grid; grid-template-columns: 96px 1fr; align-items: center; gap: 12px; color: var(--muted); font-size: 10px; }
+.crop-controls label > span { display: flex; align-items: center; gap: 6px; }
+.crop-controls label svg { width: 14px; }
+.crop-controls input { width: 100%; accent-color: var(--clay-dark); }
+.crop-editor-actions { margin-top: 23px; display: grid; grid-template-columns: 1fr 1.35fr; gap: 9px; }
+.crop-editor-actions .button { padding: 0 14px; gap: 9px; }
+.crop-editor-actions svg { width: 16px; }
 .publish-success { min-height: 65vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 .publish-success > span { width: 70px; height: 70px; display: grid; place-items: center; border-radius: 50%; background: var(--moss); color: white; }
 .publish-success .button { margin-top: 28px; }
@@ -384,8 +403,14 @@ footer button { padding: 0; border: 0; background: transparent; color: inherit; 
   .studio-sticky-actions--three { grid-template-columns: .8fr 1fr 1fr; }
   .studio-sticky-actions .button { min-height: 54px; padding: 0 12px; }
   .listing-preview { grid-template-columns: 1fr; }
-  .listing-preview > img { min-height: 360px; }
+  .listing-preview-image { min-height: 360px; }
   .listing-preview > div { padding: 27px; }
+  .crop-photo { width: 36px; padding: 0; justify-content: center; font-size: 0; }
+  .crop-editor-backdrop { padding: 0; place-items: end center; }
+  .crop-editor { width: 100%; max-height: 100dvh; padding: 20px 18px max(18px,env(safe-area-inset-bottom)); border-radius: 16px 16px 0 0; }
+  .crop-editor > header h2 { font-size: 30px; }
+  .crop-stage { width: min(270px,calc(100vw - 48px)); margin-top: 18px; }
+  .crop-controls label { grid-template-columns: 82px 1fr; }
   .catalog-item-summary { grid-template-columns: 68px minmax(0,1fr); }
   .catalog-item-summary > img { width: 68px; height: 82px; }
   .listing-status { grid-column: 2; justify-self: start; margin-top: -14px; }

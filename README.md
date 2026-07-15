@@ -1,6 +1,6 @@
 # Fern & Finch
 
-A nature-forward digital shop for original art, thrifted finds, and handmade work. The storefront is a static React site hosted on GitHub Pages. Supabase provides the catalog, product-image storage, row-level security, and password-free owner sign-in.
+A nature-forward digital shop for original art, thrifted finds, and handmade work. The storefront is a static React site hosted on GitHub Pages. Supabase provides the catalog, product-image storage, row-level security, and private owner sign-in.
 
 ## Run locally
 
@@ -24,7 +24,7 @@ After applying the migration, add the shop owner's authenticated user ID to `pub
 
 ## iPhone publishing
 
-Open the live store and choose **Maker Studio**. The owner receives a password-free sign-in link by email. **Take or choose a photo** opens the rear camera on supported iPhones. Before upload, the browser rotates the camera image correctly, resizes its longest edge to 1800 pixels, and converts it to a high-quality JPEG for a consistent catalog.
+Open the live store and choose **Maker Studio**, then sign in with the private store email and password. Choose up to six photos from the iPhone and tap **Crop** on any photo to reposition or zoom it inside the shop's consistent 4:5 frame. Before upload, the browser applies that crop, rotates the camera image correctly, and converts it to a high-quality JPEG for a consistent catalog.
 
 Use **Manage shop** to edit listing details, change price or quantity, feature a piece, hide a sold item, or return it to the storefront.
 

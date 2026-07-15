@@ -1,5 +1,5 @@
-import { ArrowLeft, ArrowRight, Camera, Check, ChevronLeft, ImagePlus, ListTree, LoaderCircle, LockKeyhole, LogOut, Plus, Sparkles, Star, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ArrowLeft, ArrowRight, Camera, Check, ChevronLeft, Crop, ImagePlus, ListTree, LoaderCircle, LockKeyhole, LogOut, Move, Plus, RotateCcw, Sparkles, Star, X, ZoomIn } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { CatalogManager } from './CatalogManager.jsx'
 import { BotanicalDivider } from './BotanicalDivider.jsx'
 import { BrandMark } from './BrandMark.jsx'
@@ -8,6 +8,8 @@ import { checkAdmin, createProduct, removeProductImages, uploadProductImages } f
 import { supabase, supabaseConfigured } from '../lib/supabase.js'
 
 const initialForm = { title: '', category: 'Art', price: '', description: '', story: '', materials: '', dimensions: '', inventory: '1', featured: false }
+const initialCrop = { x: 50, y: 50, zoom: 1 }
+const cropValue = (value, minimum = 0, maximum = 100) => Math.min(maximum, Math.max(minimum, value))
 const slugify = (value) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 48)
 const studioUrl = () => {
   const url = new URL(import.meta.env.BASE_URL, location.origin)
@@ -94,10 +96,69 @@ function StudioAccess({ onReady }) {
   )
 }
 
+const photoBackground = (photo) => ({
+  backgroundImage: `url(${JSON.stringify(photo.preview)})`,
+  backgroundPosition: `${photo.crop.x}% ${photo.crop.y}%`,
+  backgroundRepeat: 'no-repeat',
+  backgroundSize: photo.aspect >= 4 / 5 ? `auto ${photo.crop.zoom * 100}%` : `${photo.crop.zoom * 100}% auto`,
+})
+
+function CropFrame({ photo, className = '', label }) {
+  return <div className={`crop-frame ${className}`} style={photoBackground(photo)} role="img" aria-label={label} />
+}
+
+function loadPhoto(file) {
+  const preview = URL.createObjectURL(file)
+  return new Promise((resolve) => {
+    const image = new Image()
+    const finish = (aspect) => resolve({ file, preview, aspect, crop: { ...initialCrop } })
+    image.onload = () => finish(image.naturalWidth / image.naturalHeight)
+    image.onerror = () => finish(1)
+    image.src = preview
+  })
+}
+
+function PhotoCropEditor({ photo, onChange, onDone }) {
+  const drag = useRef(null)
+  const update = (changes) => onChange({ ...photo.crop, ...changes })
+  const startDrag = (event) => {
+    event.currentTarget.setPointerCapture(event.pointerId)
+    drag.current = { pointerId: event.pointerId, clientX: event.clientX, clientY: event.clientY, crop: photo.crop }
+  }
+  const moveCrop = (event) => {
+    if (drag.current?.pointerId !== event.pointerId) return
+    const bounds = event.currentTarget.getBoundingClientRect()
+    update({
+      x: cropValue(drag.current.crop.x - ((event.clientX - drag.current.clientX) / bounds.width) * 100),
+      y: cropValue(drag.current.crop.y - ((event.clientY - drag.current.clientY) / bounds.height) * 100),
+    })
+  }
+  const stopDrag = (event) => {
+    if (drag.current?.pointerId === event.pointerId) drag.current = null
+  }
+
+  return (
+    <div className="crop-editor-backdrop" role="presentation">
+      <section className="crop-editor" role="dialog" aria-modal="true" aria-labelledby="crop-editor-title">
+        <header><div><span>Photo framing</span><h2 id="crop-editor-title">Adjust the crop</h2></div><button type="button" className="icon-button" onClick={onDone} aria-label="Close crop editor"><X /></button></header>
+        <div className="crop-stage" style={photoBackground(photo)} onPointerDown={startDrag} onPointerMove={moveCrop} onPointerUp={stopDrag} onPointerCancel={stopDrag} role="img" aria-label="Current cropped photo preview" />
+        <p className="crop-hint"><Move /> Drag the photo until it feels right inside the shop frame.</p>
+        <div className="crop-controls">
+          <label><span>Left ↔ right</span><input type="range" min="0" max="100" value={photo.crop.x} onChange={(event) => update({ x: Number(event.target.value) })} /></label>
+          <label><span>Up ↕ down</span><input type="range" min="0" max="100" value={photo.crop.y} onChange={(event) => update({ y: Number(event.target.value) })} /></label>
+          <label><span><ZoomIn /> Zoom</span><input type="range" min="1" max="2.5" step="0.05" value={photo.crop.zoom} onChange={(event) => update({ zoom: Number(event.target.value) })} /></label>
+        </div>
+        <div className="crop-editor-actions"><button type="button" className="button button--ghost" onClick={() => onChange({ ...initialCrop })}><RotateCcw /> Reset</button><button type="button" className="button button--clay" onClick={onDone}><Check /> Use this crop</button></div>
+      </section>
+    </div>
+  )
+}
+
 function PhotoStep({ photos, setPhotos, onContinue }) {
-  const addPhotos = (files) => {
+  const [cropIndex, setCropIndex] = useState(null)
+  const addPhotos = async (files) => {
     if (!files?.length) return
-    const incoming = [...files].slice(0, 6 - photos.length).map((file) => ({ file, preview: URL.createObjectURL(file) }))
+    const incoming = await Promise.all([...files].slice(0, 6 - photos.length).map(loadPhoto))
     setPhotos((current) => [...current, ...incoming])
   }
   const remove = (index) => setPhotos((current) => current.filter((photo, photoIndex) => {
@@ -111,20 +172,24 @@ function PhotoStep({ photos, setPhotos, onContinue }) {
     ;[next[index], next[target]] = [next[target], next[index]]
     return next
   })
+  const updateCrop = (index, crop) => setPhotos((current) => current.map((photo, photoIndex) => photoIndex === index ? { ...photo, crop } : photo))
+  const editingPhoto = cropIndex === null ? null : photos[cropIndex]
   return (
     <section className="studio-step photo-step">
       <BotanicalDivider />
       <h1>Add a new treasure</h1>
       <p>Start with a few good photos.</p>
-      <label className="choose-photos"><ImagePlus /><span>Choose photos</span><input type="file" accept="image/*" multiple onChange={(event) => addPhotos(event.target.files)} /></label>
+      <label className="choose-photos"><ImagePlus /><span>Choose photos</span><input type="file" accept="image/*" multiple onChange={(event) => { addPhotos(event.target.files); event.target.value = '' }} /></label>
       <small className="photo-limit">Up to 6 photos · the first photo is the cover</small>
       {photos.length ? <div className="studio-photo-grid">{photos.map((photo, index) => <article key={photo.preview} className={index === 0 ? 'studio-photo studio-photo--cover' : 'studio-photo'}>
-        <img src={photo.preview} alt={`Selected item photo ${index + 1}`} />
+        <CropFrame photo={photo} label={`Selected item photo ${index + 1}`} />
         {index === 0 ? <span className="cover-label"><Star size={12} /> Cover</span> : null}
-        <button className="remove-photo" onClick={() => remove(index)} aria-label={`Remove photo ${index + 1}`}><X /></button>
-        <div className="photo-order"><button onClick={() => move(index, -1)} disabled={index === 0} aria-label="Move photo earlier"><ArrowLeft /></button><button onClick={() => move(index, 1)} disabled={index === photos.length - 1} aria-label="Move photo later"><ArrowRight /></button></div>
+        <button type="button" className="remove-photo" onClick={() => remove(index)} aria-label={`Remove photo ${index + 1}`}><X /></button>
+        <button type="button" className="crop-photo" onClick={() => setCropIndex(index)} aria-label={`Adjust crop for photo ${index + 1}`}><Crop /> Crop</button>
+        <div className="photo-order"><button type="button" onClick={() => move(index, -1)} disabled={index === 0} aria-label="Move photo earlier"><ArrowLeft /></button><button type="button" onClick={() => move(index, 1)} disabled={index === photos.length - 1} aria-label="Move photo later"><ArrowRight /></button></div>
       </article>)}</div> : <div className="photo-empty"><Camera /><strong>Your item will look best in natural light</strong><span>Try a cover photo, a close detail, and one view that shows scale.</span></div>}
       <div className="studio-sticky-actions"><button className="button button--clay button--wide" onClick={onContinue} disabled={!photos.length}>Continue <ArrowRight /></button></div>
+      {editingPhoto ? <PhotoCropEditor photo={editingPhoto} onChange={(crop) => updateCrop(cropIndex, crop)} onDone={() => setCropIndex(null)} /> : null}
     </section>
   )
 }
@@ -159,7 +224,7 @@ function ReviewStep({ form, photos, onBack, onPublish, status }) {
     <section className="studio-step review-step">
       <div className="step-progress"><span className="complete"><Check /></span><i /><span className="complete"><Check /></span><i /><span className="active">3</span></div>
       <BotanicalDivider /><h1>Ready for the shop?</h1><p>Take one last look before you publish.</p>
-      <div className="listing-preview"><img src={photos[0]?.preview} alt="Listing cover preview" /><div><span>{form.category}</span><h2>{form.title}</h2><strong>${Number(form.price || 0).toFixed(2)}</strong><p>{form.description}</p><small>{Number(form.inventory) === 1 ? 'Only one available' : `${form.inventory} available`}</small></div></div>
+      <div className="listing-preview"><CropFrame photo={photos[0]} className="listing-preview-image" label="Listing cover preview" /><div><span>{form.category}</span><h2>{form.title}</h2><strong>${Number(form.price || 0).toFixed(2)}</strong><p>{form.description}</p><small>{Number(form.inventory) === 1 ? 'Only one available' : `${form.inventory} available`}</small></div></div>
       {status.error ? <p className="form-error">{status.error}</p> : null}
       <div className="studio-sticky-actions"><button className="button button--ghost" onClick={onBack}>Edit details</button><button className="button button--clay" onClick={() => onPublish(true)} disabled={status.loading}>{status.loading ? <LoaderCircle className="spin" /> : <Sparkles />} {status.loading ? 'Publishing…' : 'Publish item'}</button></div>
     </section>
@@ -183,7 +248,7 @@ export function Studio({ open, onClose, onPublished, onItemChanged }) {
     setStatus({ loading: true, error: '', success: false, draft: !active })
     let images = []
     try {
-      const prepared = await Promise.all(photos.map((photo) => prepareProductImage(photo.file)))
+      const prepared = await Promise.all(photos.map((photo) => prepareProductImage(photo.file, photo.crop)))
       images = await uploadProductImages(prepared)
       const result = await createProduct({
         id: `${slugify(form.title) || 'piece'}-${crypto.randomUUID().slice(0, 8)}`,
