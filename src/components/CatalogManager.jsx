@@ -1,11 +1,12 @@
-import { Check, Eye, EyeOff, LoaderCircle, PackageOpen, Pencil, RefreshCw, Save } from 'lucide-react'
+import { Check, Eye, EyeOff, LoaderCircle, PackageOpen, Pencil, RefreshCw, Save, Tag } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { BotanicalDivider } from './BotanicalDivider.jsx'
 import { listProducts, updateProduct } from '../lib/store.js'
 
 function CatalogItemEditor({ item, onSaved }) {
   const [draft, setDraft] = useState(() => ({
     title: item.title, category: item.category, price: String(item.price), inventory: String(item.inventory),
-    description: item.description || '', story: item.story || '', materials: item.materials || '', featured: Boolean(item.featured),
+    description: item.description || '', story: item.story || '', materials: item.materials || '', dimensions: item.dimensions || '', featured: Boolean(item.featured),
   }))
   const [status, setStatus] = useState({ loading: false, error: '', saved: false })
   const update = (key, value) => setDraft((current) => ({ ...current, [key]: value }))
@@ -25,7 +26,7 @@ function CatalogItemEditor({ item, onSaved }) {
     event.preventDefault()
     save({ ...draft, price: Number(draft.price), inventory: Number(draft.inventory) })
   }
-  const statusLabel = item.active === false ? 'Hidden' : item.inventory < 1 ? 'Sold out' : 'Live'
+  const statusLabel = item.active === false ? 'Draft' : item.inventory < 1 ? 'Sold' : 'Live'
 
   return (
     <article className="catalog-item">
@@ -36,6 +37,7 @@ function CatalogItemEditor({ item, onSaved }) {
       </div>
       <div className="catalog-quick-actions">
         <button type="button" onClick={() => save({ active: item.active === false })} disabled={status.loading}>{item.active === false ? <Eye size={16} /> : <EyeOff size={16} />}{item.active === false ? 'Put back in shop' : 'Hide from shop'}</button>
+        <button type="button" onClick={() => save({ inventory: item.inventory > 0 ? 0 : 1 })} disabled={status.loading}><Tag size={16} />{item.inventory > 0 ? 'Mark sold' : 'Restock one'}</button>
         <button type="button" onClick={() => save({ featured: !item.featured })} disabled={status.loading}>{item.featured ? <Check size={16} /> : <PackageOpen size={16} />}{item.featured ? 'Featured' : 'Feature item'}</button>
       </div>
       <details className="catalog-details">
@@ -49,6 +51,7 @@ function CatalogItemEditor({ item, onSaved }) {
             <label className="field field--wide"><span>Short description</span><textarea rows="3" value={draft.description} onChange={(event) => update('description', event.target.value)} /></label>
             <label className="field field--wide"><span>Its little story</span><textarea rows="3" value={draft.story} onChange={(event) => update('story', event.target.value)} /></label>
             <label className="field field--wide"><span>Materials & details</span><input value={draft.materials} onChange={(event) => update('materials', event.target.value)} /></label>
+            <label className="field field--wide"><span>Dimensions</span><input value={draft.dimensions} onChange={(event) => update('dimensions', event.target.value)} /></label>
           </div>
           <label className="feature-toggle"><input type="checkbox" checked={draft.featured} onChange={(event) => update('featured', event.target.checked)} /><span><b>Feature on the home page</b><small>Give this piece a little more attention</small></span></label>
           {status.error ? <p className="form-error">{status.error}</p> : null}
@@ -71,7 +74,7 @@ export function CatalogManager({ onItemChanged }) {
   const saveItem = (updated) => { setItems((current) => current.map((item) => item.id === updated.id ? updated : item)); onItemChanged(updated) }
   return (
     <section className="catalog-manager">
-      <div className="studio-intro catalog-intro"><span>Your collection</span><h1>Tend the shop.</h1><p>Update a price or quantity, feature a favorite, or tuck a sold piece away.</p></div>
+      <div className="studio-intro catalog-intro"><BotanicalDivider /><h1>Your catalog</h1><p>Edit a listing, mark a treasure sold, or tuck a piece away.</p></div>
       {status.error ? <p className="form-error catalog-access-error">{status.error}</p> : null}
       {!status.loading && !status.error ? <div className="catalog-list"><div className="catalog-list-heading"><span>{items.length} pieces</span><button onClick={loadCatalog}><RefreshCw size={14} /> Refresh</button></div>{items.map((item) => <CatalogItemEditor key={item.id} item={item} onSaved={saveItem} />)}</div> : null}
       {status.loading ? <div className="studio-loading"><LoaderCircle className="spin" /> Opening your collection…</div> : null}

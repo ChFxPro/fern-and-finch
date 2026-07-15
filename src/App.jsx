@@ -1,6 +1,7 @@
-import { ArrowDown, ArrowRight, CheckCircle2, Feather } from 'lucide-react'
+import { ArrowDown, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { BrandMark } from './components/BrandMark.jsx'
+import { BotanicalDivider } from './components/BotanicalDivider.jsx'
 import { CartDrawer } from './components/CartDrawer.jsx'
 import { Header } from './components/Header.jsx'
 import { ProductCard } from './components/ProductCard.jsx'
@@ -42,7 +43,7 @@ export function App() {
     setCheckoutState({ loading: false, error: 'Secure checkout is the next step and will be available soon.' })
   }
   const publish = (item) => {
-    setItems((current) => [item, ...current])
+    if (item.active) setItems((current) => [item, ...current])
     setFilter('All')
   }
   const updateListing = (updated) => {
@@ -63,21 +64,18 @@ export function App() {
       <Header bagCount={bagCount} onBag={() => setCartOpen(true)} menuOpen={menuOpen} setMenuOpen={setMenuOpen} onStudio={() => setStudioOpen(true)} />
       <main>
         <section className="hero" aria-labelledby="hero-title">
+          <img className="hero-background" src={`${import.meta.env.BASE_URL}assets/fern-finch-hero.webp`} alt="A warm, plant-filled maker's studio with botanical art and gathered objects" />
           <div className="hero-copy">
-            <h1 id="hero-title">Made, found, and<br />gathered <em>with care.</em></h1>
+            <BotanicalDivider light />
+            <h1 id="hero-title">Made, found,<br />and gathered<br /><em>with care.</em></h1>
             <p>Original art, storied finds, and small-batch pieces for a home that feels like yours.</p>
-            <a className="button button--pine" href="#shop">Explore the collection <ArrowDown size={17} /></a>
+            <a className="button button--clay" href="#shop">Explore the collection <ArrowDown size={17} /></a>
           </div>
-          <div className="hero-image" role="img" aria-label="An artist's table with handmade pottery, botanical studies and gathered ferns">
-            <img src="https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=1800&q=90" alt="A warm, naturally lit table of handmade objects and art supplies" />
-            <div className="hero-caption"><Feather size={16} /><span>Small treasures for the everyday</span></div>
-          </div>
-          <div className="hero-index"><span>01</span><i /><span>Gathered slowly</span></div>
         </section>
 
         <section className="collection" id="shop">
           <div className="section-heading">
-            <div><p>Current collection</p><h2>Fresh from the worktable</h2></div>
+            <div><BotanicalDivider /><h2>Fresh from the worktable</h2></div>
             <p>Each object is made or chosen by hand. Once a one-of-a-kind piece is gone, it begins its next story.</p>
           </div>
           <div className="filter-row" role="group" aria-label="Filter products">
@@ -90,18 +88,17 @@ export function App() {
         </section>
 
         <section className="story" id="story">
-          <div className="story-image"><img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1600&q=90" alt="Hands working carefully on a handmade piece" /></div>
-          <div className="story-copy"><BrandMark light /><h2>Objects with a little<br /><em>life in them.</em></h2><p>I’ve always loved things that show the hand that made them, the miles they’ve traveled, or the quiet beauty someone else nearly missed.</p><p>Fern & Finch is my gathering place for those pieces — made at my own table or found while wandering.</p><a href="#journal">Meet the maker <ArrowRight size={17} /></a><span className="signature">— Mom</span></div>
+          <div className="story-image"><img src={`${import.meta.env.BASE_URL}assets/fern-finch-story.webp`} alt="A sunlit maker's corner filled with ferns, botanical studies, and well-used tools" /></div>
+          <div className="story-copy"><BotanicalDivider light /><h2>Objects with a little<br /><em>life in them.</em></h2><p>I’ve always loved things that show the hand that made them, the miles they’ve traveled, or the quiet beauty someone else nearly missed.</p><p>Fern & Finch is my gathering place for those pieces — made at my own table or found while wandering.</p><a href="mailto:hello@fernandfinch.shop">Meet the maker <ArrowRight size={17} /></a><span className="signature">— Mom</span></div>
         </section>
 
-        <section className="journal" id="journal">
-          <div className="journal-title"><p>Field notes</p><h2>From the woods,<br />the road, and the table.</h2></div>
-          <article><span>Gathering</span><h3>How to live with one-of-a-kind things</h3><a href="#journal">Read the note <ArrowRight size={15} /></a></article>
-          <article><span>Making</span><h3>The quiet pleasure of working by hand</h3><a href="#journal">Read the note <ArrowRight size={15} /></a></article>
+        <section className="seasonal" aria-label="Seasonal collection">
+          <img src={`${import.meta.env.BASE_URL}assets/fern-finch-seasonal.webp`} alt="A warm seasonal still life of a fern mug, wool, old books, and gathered greenery" />
+          <div className="seasonal-copy"><h2>Gathered for the season</h2><BotanicalDivider light /><a className="button button--clay" href="#shop">Shop the seasonal edit <ArrowRight size={17} /></a></div>
         </section>
 
         <section className="newsletter">
-          <Feather className="newsletter-feather" />
+          <BrandMark />
           <div><h2>A small note from the woods</h2><p>New pieces, studio stories, and the occasional lovely thing worth sharing. Never too much.</p></div>
           {emailState === 'joined' ? <div className="joined"><CheckCircle2 /> You’re on the list. Welcome in.</div> : (
             <form onSubmit={(event) => { event.preventDefault(); setEmailState('joined') }}><label><span className="sr-only">Your email address</span><input type="email" placeholder="Your email" required /></label><button>Join the list <ArrowRight size={16} /></button></form>
@@ -111,7 +108,7 @@ export function App() {
 
       <footer>
         <div className="footer-brand"><BrandMark light /><span>Fern <i>&</i> Finch</span><p>Made, found, and gathered with care.</p></div>
-        <div><h3>Wander</h3><a href="#shop">Shop all</a><a href="#story">Our story</a><a href="#journal">Journal</a></div>
+          <div><h3>Wander</h3><a href="#shop">Shop all</a><a href="#story">Our story</a></div>
         <div><h3>Help</h3><a href="mailto:hello@fernandfinch.shop">Contact</a><a href="#shipping">Shipping & returns</a><button onClick={() => setStudioOpen(true)}>Maker Studio</button></div>
         <div className="footer-social"><a href="https://instagram.com" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4.2" /><circle cx="17.4" cy="6.7" r="1" fill="currentColor" stroke="none" /></svg></a></div>
         <p className="copyright">© {new Date().getFullYear()} Fern & Finch. All the good things, thoughtfully gathered.</p>
