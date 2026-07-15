@@ -1,5 +1,8 @@
 create extension if not exists pgcrypto;
 
+create schema if not exists private;
+revoke all on schema private from public, anon, authenticated;
+
 create table public.store_admins (
   user_id uuid primary key references auth.users(id) on delete cascade,
   created_at timestamptz not null default now()
@@ -8,19 +11,33 @@ create table public.store_admins (
 alter table public.store_admins enable row level security;
 revoke all on public.store_admins from anon, authenticated;
 
-create or replace function public.is_store_admin()
+create or replace function private.is_store_admin()
 returns boolean
 language sql
 stable
 security definer
 set search_path = ''
 as $$
-  select exists (
+  select (select auth.uid()) is not null and exists (
     select 1 from public.store_admins where user_id = (select auth.uid())
   );
 $$;
 
-revoke all on function public.is_store_admin() from public;
+revoke all on function private.is_store_admin() from public, anon, authenticated;
+grant usage on schema private to authenticated;
+grant execute on function private.is_store_admin() to authenticated;
+
+create or replace function public.is_store_admin()
+returns boolean
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select private.is_store_admin();
+$$;
+
+revoke all on function public.is_store_admin() from public, anon;
 grant execute on function public.is_store_admin() to authenticated;
 
 create table public.products (
@@ -43,15 +60,15 @@ alter table public.products enable row level security;
 grant select on public.products to anon, authenticated;
 grant insert, update, delete on public.products to authenticated;
 
-create policy "Anyone can view active products"
+create policy "Public can view active products"
 on public.products for select
-to anon, authenticated
+to anon
 using (active);
 
-create policy "Store admins can view hidden products"
+create policy "Signed in users can view allowed products"
 on public.products for select
 to authenticated
-using ((select public.is_store_admin()));
+using (active or (select public.is_store_admin()));
 
 create policy "Store admins can create products"
 on public.products for insert

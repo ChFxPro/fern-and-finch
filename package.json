@@ -10,7 +10,7 @@
     "validate": "npm run build"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.5",
+    "@supabase/supabase-js": "2.110.5",
     "@vitejs/plugin-react": "latest",
     "lucide-react": "latest",
     "react": "latest",
