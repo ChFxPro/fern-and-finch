@@ -1,0 +1,80 @@
+[
+  {
+    "id": "woodland-study-4",
+    "title": "Woodland Study No. 4",
+    "category": "Art",
+    "price": 86,
+    "description": "An original mixed-media study of the quiet edge where meadow meets woods.",
+    "story": "Painted in small layers over a slow autumn week.",
+    "materials": "Gouache, graphite, handmade cotton paper",
+    "inventory": 1,
+    "featured": true,
+    "active": true,
+    "image": "https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&w=1400&q=88"
+  },
+  {
+    "id": "brass-songbird",
+    "title": "Little Studio Cat Print",
+    "category": "Art",
+    "price": 42,
+    "description": "A soft, watchful portrait print for a small wall, reading nook, or bedside.",
+    "story": "Made from a quiet studio companion who always finds the warmest seat.",
+    "materials": "Archival pigment print on cotton paper",
+    "inventory": 1,
+    "featured": true,
+    "active": true,
+    "image": "https://images.unsplash.com/photo-1591871937573-74dbba515c4c?auto=format&fit=crop&w=1400&q=88"
+  },
+  {
+    "id": "market-tote",
+    "title": "Forest Green Handbag",
+    "category": "Found",
+    "price": 64,
+    "description": "A structured vintage handbag in the deepest woodland green.",
+    "story": "Found in beautiful condition, with just enough patina to tell its story.",
+    "materials": "Vintage leather and brass hardware",
+    "inventory": 2,
+    "featured": false,
+    "active": true,
+    "image": "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=1400&q=88"
+  },
+  {
+    "id": "pressed-fern-frame",
+    "title": "Kitchen Fern",
+    "category": "Found",
+    "price": 58,
+    "description": "A cheerful little fern settled into a simple, timeworn pot.",
+    "story": "Propagated from the studio plant that refuses to stop growing.",
+    "materials": "Living fern in a vintage ceramic planter",
+    "inventory": 1,
+    "featured": false,
+    "active": true,
+    "image": "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1400&q=88"
+  },
+  {
+    "id": "little-wren-vessel",
+    "title": "Speckled Stoneware Set",
+    "category": "Handmade",
+    "price": 48,
+    "description": "A softly mismatched family of cups and vessels in warm, milky glaze.",
+    "story": "Thrown and pinched in small batches, with every variation left in place.",
+    "materials": "Speckled stoneware and food-safe glaze",
+    "inventory": 1,
+    "featured": false,
+    "active": true,
+    "image": "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=1400&q=88"
+  },
+  {
+    "id": "moss-glass-bottle",
+    "title": "Cedar & Moss Candle",
+    "category": "Handmade",
+    "price": 36,
+    "description": "A dark, woodsy candle poured into an amber glass tumbler.",
+    "story": "Made for rainy afternoons, old books, and a kettle on the stove.",
+    "materials": "Soy wax, cedarwood and oakmoss fragrance",
+    "inventory": 1,
+    "featured": false,
+    "active": true,
+    "image": "https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=1400&q=88"
+  }
+]
