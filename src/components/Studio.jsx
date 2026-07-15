@@ -9,6 +9,11 @@ import { supabase, supabaseConfigured } from '../lib/supabase.js'
 
 const initialForm = { title: '', category: 'Art', price: '', description: '', story: '', materials: '', dimensions: '', inventory: '1', featured: false }
 const slugify = (value) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 48)
+const studioUrl = () => {
+  const url = new URL(import.meta.env.BASE_URL, location.origin)
+  url.searchParams.set('studio', '1')
+  return url
+}
 
 function StudioAccess({ onReady }) {
   const [email, setEmail] = useState('')
@@ -18,8 +23,22 @@ function StudioAccess({ onReady }) {
     let active = true
     const inspect = async () => {
       if (!supabaseConfigured) return active && setState({ loading: false, sent: false, error: 'The shop database is not connected yet.', denied: false })
-      const { data } = await supabase.auth.getSession()
+
+      const callbackError = new URLSearchParams(location.hash.slice(1)).get('error_description') || new URL(location.href).searchParams.get('error_description')
+      if (callbackError) {
+        history.replaceState(null, '', studioUrl())
+        return active && setState({ loading: false, sent: false, error: 'That sign-in link has expired or was already used. Please request a fresh one.', denied: false })
+      }
+
+      const { data, error } = await supabase.auth.getSession()
+      if (error) return active && setState({ loading: false, sent: false, error: 'We could not open your saved sign-in. Please request a fresh link.', denied: false })
       if (!data.session) return active && setState((current) => ({ ...current, loading: false }))
+
+      const { data: verified, error: verificationError } = await supabase.auth.getUser()
+      if (verificationError || !verified.user) {
+        await supabase.auth.signOut()
+        return active && setState({ loading: false, sent: false, error: 'Your sign-in has expired. Please request a fresh link.', denied: false })
+      }
       if (await checkAdmin()) return active && onReady(data.session)
       return active && setState({ loading: false, sent: false, error: '', denied: true })
     }
@@ -31,21 +50,28 @@ function StudioAccess({ onReady }) {
   const sendLink = async (event) => {
     event.preventDefault()
     setState({ loading: true, sent: false, error: '', denied: false })
-    const redirect = new URL(location.href)
-    redirect.searchParams.set('studio', '1')
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect.toString() } })
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim().toLowerCase(),
+      options: { emailRedirectTo: studioUrl().toString(), shouldCreateUser: false },
+    })
     setState(error ? { loading: false, sent: false, error: error.message, denied: false } : { loading: false, sent: true, error: '', denied: false })
   }
 
+  const useAnotherEmail = async () => {
+    await supabase.auth.signOut()
+    setEmail('')
+    setState({ loading: false, sent: false, error: '', denied: false })
+  }
+
   if (state.loading) return <div className="studio-login"><LoaderCircle className="spin" /><p>Opening the studio…</p></div>
-  if (state.denied) return <div className="studio-login"><span><Mail /></span><h1>Almost ready.</h1><p>This email is signed in, but it still needs shop-owner access.</p><button className="text-link" onClick={() => supabase.auth.signOut()}>Use a different email</button></div>
+  if (state.denied) return <div className="studio-login"><span><Mail /></span><h1>Almost ready.</h1><p>This email is signed in, but it still needs shop-owner access.</p><button className="text-link" onClick={useAnotherEmail}>Use a different email</button></div>
   return (
     <form className="studio-login" onSubmit={sendLink}>
       <span><Mail /></span><BotanicalDivider /><h1>Welcome to the studio.</h1><p>Enter your email and we’ll send a safe, password-free sign-in link.</p>
       <label className="field"><span>Email address</span><input type="email" inputMode="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" required /></label>
-      {state.sent ? <p className="studio-sent"><Check /> Check your email, then tap the sign-in link.</p> : null}
-      {state.error ? <p className="form-error">{state.error}</p> : null}
-      <button className="button button--clay button--wide" disabled={state.loading}>{state.loading ? <LoaderCircle className="spin" /> : <Mail />} Email my sign-in link</button>
+      {state.sent ? <p className="studio-sent" role="status"><Check /> Link sent. Check your email, then tap it to open the studio.</p> : null}
+      {state.error ? <p className="form-error" role="alert">{state.error}</p> : null}
+      <button className="button button--clay button--wide" disabled={state.loading}>{state.loading ? <LoaderCircle className="spin" /> : <Mail />} {state.sent ? 'Send a fresh link' : 'Email my sign-in link'}</button>
     </form>
   )
 }
