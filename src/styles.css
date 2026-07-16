@@ -22,7 +22,7 @@
 
 * { box-sizing: border-box; }
 html { width: 100%; max-width: 100%; overflow-x: hidden; scroll-behavior: smooth; overscroll-behavior-x: none; }
-body, #root, #top { width: 100%; max-width: 100%; overflow-x: hidden; }
+body, #root, #top { width: 100%; max-width: 100%; overflow-x: hidden; touch-action: pan-y pinch-zoom; }
 body { margin: 0; min-width: 0; background: var(--paper); }
 @supports (overflow: clip) {
   html, body, #root, #top { overflow-x: clip; }
