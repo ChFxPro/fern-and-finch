@@ -22,11 +22,8 @@
 
 * { box-sizing: border-box; }
 html { width: 100%; max-width: 100%; overflow-x: hidden; scroll-behavior: smooth; overscroll-behavior-x: none; -webkit-text-size-adjust: 100%; }
-body, #root, #top { width: 100%; max-width: 100%; overflow-x: hidden; touch-action: pan-y pinch-zoom; }
+body, #root, #top { width: 100%; max-width: 100%; overflow-x: hidden; }
 body { margin: 0; min-width: 0; background: var(--paper); }
-@supports (overflow: clip) {
-  html, body, #root, #top { overflow-x: clip; }
-}
 body:has(.modal-backdrop), body:has(.cart-drawer--open), body:has(.studio-shell) { overflow: hidden; }
 button, input, textarea, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
@@ -432,6 +429,11 @@ footer button { padding: 0; border: 0; background: transparent; color: inherit; 
   .hero-copy .button { width: 100%; padding-inline: 14px; gap: 12px; }
   .collection { padding-left: 12px; padding-right: 12px; }
   .section-heading h2 { font-size: clamp(31px, 10.5vw, 36px); }
+  .product-grid { grid-template-columns: minmax(0,1fr); gap: 32px; }
+  .story-copy h2, .seasonal h2 { font-size: clamp(36px, 13vw, 44px); overflow-wrap: anywhere; }
+  footer { grid-template-columns: minmax(0,1fr); }
+  footer > div, .footer-brand, .footer-social { grid-column: 1; min-width: 0; }
+  .copyright { grid-column: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
